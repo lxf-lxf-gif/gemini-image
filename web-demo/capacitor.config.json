@@ -1,0 +1,9 @@
+{
+    "appId": "com.aiimage.generator",
+    "appName": "AI Image Generator",
+    "webDir": "dist",
+    "bundledWebRuntime": false,
+    "server": {
+        "androidScheme": "https"
+    }
+}

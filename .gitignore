@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production builds
+dist/
+dist-electron/
+build/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+build.log
+build_error.log
+vite_error.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Electron
+release/
+app/
+
+# Android (Capacitor)
+android/
+*.apk
+*.aab
+local.properties
+
+# Build scripts (optional, can remove if you want to keep them)
+*.bat
+*.ps1
+BUILD_APK.md
+
+# Test files
+test-*.js
+test-*.jpg
+*_original
+tsc_error.txt

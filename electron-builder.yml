@@ -1,0 +1,72 @@
+appId: com.imagemarketing.app
+productName: 图片批处理大师
+directories:
+  output: dist
+  buildResources: build
+
+# Windows 配置
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+# NSIS 安装程序配置
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: 图片批处理大师
+  deleteAppDataOnUninstall: true
+  perMachine: false
+
+# macOS 配置
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.graphics-design
+
+# Linux 配置
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Graphics
+
+# 文件包含/排除
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!*.md"
+  - "!*.log"
+  - "!test-*.js"
+  - "!build.log"
+  - "!build_error.log"
+  - "!vite_error.log"
+  - "!ERRORS.md"
+  - "!FEATURES.md"
+  - dist/**/*
+  - electron/**/*
+  - package.json
+
+# ASAR 配置 - 关键! 这些原生模块需要解包才能正常工作
+asarUnpack:
+  - "**/node_modules/sharp/**/*"
+  - "**/node_modules/@img/**/*"
+  - "**/node_modules/@imgly/**/*"
+  - "**/node_modules/exiftool-vendored*/**/*"
+  - "**/node_modules/onnxruntime-node/**/*"
+
+# 额外资源 - 确保原生模块可访问
+extraResources:
+  - from: node_modules/sharp
+    to: app.asar.unpacked/node_modules/sharp
+    filter:
+      - "**/*"
+  - from: node_modules/exiftool-vendored.exe
+    to: app.asar.unpacked/node_modules/exiftool-vendored.exe
+    filter:
+      - "**/*"
