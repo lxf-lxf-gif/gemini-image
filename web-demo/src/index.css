@@ -2,6 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default Theme: Palette 1 - Classic Light */
+:root,
+[data-theme="palette-1"] {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #f8f5f2;
+    --bg-card: rgba(248, 245, 242, 0.8);
+    --text-primary: #1f1235;
+    --text-secondary: #1b1425;
+    --text-muted: #67568c;
+    --accent-primary: #ff6e6c;
+    --accent-secondary: #fbdd74;
+    --border-color: rgba(103, 86, 140, 0.15);
+    --shadow-color: rgba(31, 18, 53, 0.1);
+}
+
+/* Palette 2 - Soft Purple */
+[data-theme="palette-2"] {
+    --bg-primary: #f4effc;
+    --bg-secondary: #e2daeb;
+    --bg-card: rgba(226, 218, 235, 0.8);
+    --text-primary: #1f1135;
+    --text-secondary: #1b1325;
+    --text-muted: #67568c;
+    --accent-primary: #ff6e6c;
+    --accent-secondary: #fbdd74;
+    --border-color: rgba(103, 86, 140, 0.2);
+    --shadow-color: rgba(31, 17, 53, 0.1);
+}
+
+/* Palette 3 - Dark Elegant */
+[data-theme="palette-3"] {
+    --bg-primary: #16161a;
+    --bg-secondary: #242629;
+    --bg-card: rgba(36, 38, 41, 0.8);
+    --text-primary: #fffffe;
+    --text-secondary: #94a1b2;
+    --text-muted: #72757e;
+    --accent-primary: #7f5af0;
+    --accent-secondary: #2cb67d;
+    --border-color: rgba(127, 90, 240, 0.2);
+    --shadow-color: rgba(127, 90, 240, 0.3);
+}
+
+/* Palette 4 - Ocean Blue */
+[data-theme="palette-4"] {
+    --bg-primary: #fef6e4;
+    --bg-secondary: #f3d2c1;
+    --bg-card: rgba(243, 210, 193, 0.8);
+    --text-primary: #001858;
+    --text-secondary: #172c66;
+    --text-muted: #8bd3dd;
+    --accent-primary: #f582ae;
+    --accent-secondary: #8bd3dd;
+    --border-color: rgba(245, 130, 174, 0.2);
+    --shadow-color: rgba(0, 24, 88, 0.1);
+}
+
+/* Palette 5 - Warm Sunset */
+[data-theme="palette-5"] {
+    --bg-primary: #fffffe;
+    --bg-secondary: #f9f4ef;
+    --bg-card: rgba(249, 244, 239, 0.9);
+    --text-primary: #020826;
+    --text-secondary: #716040;
+    --text-muted: #716040;
+    --accent-primary: #f25f4c;
+    --accent-secondary: #ff8906;
+    --border-color: rgba(242, 95, 76, 0.2);
+    --shadow-color: rgba(2, 8, 38, 0.1);
+}
+
+/* Palette 6 - Fresh Mint */
+[data-theme="palette-6"] {
+    --bg-primary: #fffffe;
+    --bg-secondary: #e3f6f5;
+    --bg-card: rgba(227, 246, 245, 0.9);
+    --text-primary: #272343;
+    --text-secondary: #2d334a;
+    --text-muted: #bae8e8;
+    --accent-primary: #ffd803;
+    --accent-secondary: #bae8e8;
+    --border-color: rgba(255, 216, 3, 0.2);
+    --shadow-color: rgba(39, 35, 67, 0.1);
+}
+
+/* Palette 7 - Deep Night */
+[data-theme="palette-7"] {
+    --bg-primary: #0f0e17;
+    --bg-secondary: #1c1b29;
+    --bg-card: rgba(28, 27, 41, 0.8);
+    --text-primary: #fffffe;
+    --text-secondary: #a7a9be;
+    --text-muted: #a7a9be;
+    --accent-primary: #ff8906;
+    --accent-secondary: #f25f4c;
+    --border-color: rgba(255, 137, 6, 0.2);
+    --shadow-color: rgba(255, 137, 6, 0.3);
+}
+
+/* Palette 8 - Pastel Dream */
+[data-theme="palette-8"] {
+    --bg-primary: #faeee7;
+    --bg-secondary: #fffffe;
+    --bg-card: rgba(255, 255, 254, 0.9);
+    --text-primary: #33272a;
+    --text-secondary: #594a4e;
+    --text-muted: #ff8ba7;
+    --accent-primary: #ff8ba7;
+    --accent-secondary: #ffc6c7;
+    --border-color: rgba(255, 139, 167, 0.2);
+    --shadow-color: rgba(51, 39, 42, 0.1);
+}
+
+/* Legacy variables for backward compatibility */
 :root {
     --neon-purple: #8b5cf6;
     --neon-blue: #3b82f6;
@@ -11,18 +125,19 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Microsoft YaHei', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #0f172a;
-    background-image:
-        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
-    color: #f1f5f9;
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
     min-height: 100vh;
+    font-size: 28px;
+    /* 全局字体大小 (默认16px) */
+    transition: background-color 300ms ease, color 300ms ease;
 }
 
 #root {
@@ -142,6 +257,131 @@ body {
     textarea,
     select {
         @apply bg-slate-800/50 border-slate-700 text-slate-200 focus:ring-primary-500 focus:border-primary-500;
+    }
+}
+
+/* Tailwind Utilities Override for Theme Support */
+@layer utilities {
+
+    /* Text Colors - Map to CSS Variables */
+    .text-white {
+        color: var(--text-primary) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-slate-400,
+    .text-slate-500 {
+        color: var(--text-muted) !important;
+    }
+
+    .text-slate-600,
+    .text-slate-700 {
+        color: var(--text-muted) !important;
+        opacity: 0.8;
+    }
+
+    .text-primary-400,
+    .text-primary-500 {
+        color: var(--accent-primary) !important;
+    }
+
+    /* Background Colors - Map to CSS Variables */
+    .bg-slate-900\/20,
+    .bg-slate-900\/30,
+    .bg-slate-900\/40,
+    .bg-slate-900\/50 {
+        background-color: var(--bg-card) !important;
+    }
+
+    .bg-black\/20,
+    .bg-black\/40,
+    .bg-black\/60 {
+        background-color: var(--bg-card) !important;
+    }
+
+    .bg-white\/5,
+    .bg-white\/10 {
+        background-color: var(--bg-card) !important;
+    }
+
+    .bg-primary-500,
+    .bg-primary-600 {
+        background-color: var(--accent-primary) !important;
+    }
+
+    .bg-primary-500\/10,
+    .bg-primary-500\/20,
+    .bg-primary-600\/10,
+    .bg-primary-600\/20 {
+        background-color: color-mix(in srgb, var(--accent-primary), transparent 85%) !important;
+    }
+
+    /* Border Colors - Map to CSS Variables */
+    .border-white\/5,
+    .border-white\/10 {
+        border-color: var(--border-color) !important;
+    }
+
+    .border-slate-700,
+    .border-slate-800,
+    .border-slate-900 {
+        border-color: var(--border-color) !important;
+    }
+
+    .border-primary-500,
+    .border-primary-600 {
+        border-color: var(--accent-primary) !important;
+    }
+
+    .border-primary-500\/20,
+    .border-primary-500\/30,
+    .border-primary-600\/20 {
+        border-color: color-mix(in srgb, var(--accent-primary), transparent 70%) !important;
+    }
+
+    /* Hover States */
+    .hover\:text-white:hover {
+        color: var(--text-primary) !important;
+    }
+
+    .hover\:text-primary-400:hover,
+    .hover\:text-primary-500:hover {
+        color: var(--accent-primary) !important;
+    }
+
+    .hover\:bg-white\/10:hover {
+        background-color: var(--bg-card) !important;
+        opacity: 0.8;
+    }
+
+    .hover\:bg-primary-500:hover,
+    .hover\:bg-primary-600:hover {
+        background-color: var(--accent-primary) !important;
+        filter: brightness(1.1);
+    }
+
+    .hover\:border-primary-500:hover,
+    .hover\:border-primary-500\/30:hover,
+    .hover\:border-primary-500\/50:hover {
+        border-color: var(--accent-primary) !important;
+        opacity: 0.5;
+    }
+
+    /* Focus States */
+    .focus\:border-primary-500:focus {
+        border-color: var(--accent-primary) !important;
+    }
+
+    .focus\:ring-primary-500:focus {
+        --tw-ring-color: var(--accent-primary) !important;
+    }
+
+    /* Accent Color for Range Inputs */
+    .accent-primary-500 {
+        accent-color: var(--accent-primary) !important;
     }
 }
 

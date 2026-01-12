@@ -38,7 +38,8 @@ export async function generateImage(textPrompt, apiKey, options = {}) {
         model = 'gemini-2.0-flash-exp',
         provider = 'google',
         aspectRatio = '1:1',
-        quality = 'standard'
+        quality = 'standard',
+        temperature = 0.7
     } = options;
 
     try {
@@ -62,12 +63,6 @@ export async function generateImage(textPrompt, apiKey, options = {}) {
         if (isGoogle) {
             API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         } else {
-            // Assuming vectorengine.ai endpoint for image generation might be different
-            // The provided snippet suggests a change to /v1/chat/completions, which is for chat.
-            // For image generation, it's more likely to be similar to the original path or a dedicated image endpoint.
-            // Sticking to the original path structure for now, but noting the snippet's suggestion.
-            // If the user intended to switch to a chat endpoint for image generation,
-            // the requestBody structure would also need significant changes.
             API_URL = `https://api.vectorengine.ai/v1beta/models/${model}:generateContent`;
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
@@ -93,7 +88,8 @@ export async function generateImage(textPrompt, apiKey, options = {}) {
             }],
             generationConfig: {
                 aspectRatio: aspectRatio,
-                quality: quality === 'hd' ? 'hd' : 'standard'
+                quality: quality === 'hd' ? 'hd' : 'standard',
+                temperature: temperature
             }
         };
 
@@ -129,11 +125,7 @@ export async function generateImage(textPrompt, apiKey, options = {}) {
                     const errorMsg = errorData.error?.message || errorText;
 
                     if (response.status === 503) {
-                        throw new Error(`AI 服务暂时繁忙 (503), 请稍后再试, 或尝试切换 API 提供商。`);
-                    }
-
-                    if (response.status === 429) {
-                        throw new Error(`请求过于频繁 (429), 请稍后再试。`);
+                        throw new Error(`AI 服务暂时繁忙 (503), 请稍后再试。`);
                     }
 
                     throw new Error(`API 请求失败 (${response.status}): ${errorMsg}`);
@@ -198,20 +190,54 @@ export async function generateImage(textPrompt, apiKey, options = {}) {
         throw lastError;
 
     } catch (error) {
-        let errorMessage = error.message;
-
-        if (error.name === 'AbortError') {
-            errorMessage = '请求超时,请稍后重试';
-        } else if (error.message.includes('quota') || error.message.includes('rate limit')) {
-            errorMessage = 'API 配额已用尽或请求过于频繁,请稍后再试';
-        } else if (error.message.includes('content_policy') || error.message.includes('SAFETY')) {
-            errorMessage = '您的描述违反了内容政策,请修改后重试';
-        }
-
         return {
             success: false,
-            error: errorMessage
+            error: error.message
         };
+    }
+}
+
+/**
+ * AI Prompt Optimization (Magic Wand)
+ * Uses Gemini to translate and enhance prompt for better image results
+ */
+export async function optimizePrompt(text, apiKey, provider = 'google') {
+    try {
+        if (!text || !apiKey) return { success: false, error: '缺少内容或 API Key' };
+
+        const model = 'gemini-1.5-flash'; // Flash is fast for text
+        const API_URL = provider === 'google'
+            ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+            : `https://api.vectorengine.ai/v1beta/models/${model}:generateContent`;
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (provider !== 'google') headers['Authorization'] = `Bearer ${apiKey}`;
+
+        const prompt = `You are an expert AI image prompt engineer. Translate the following user input to English (if needed) and enhance it into a high-quality, detailed prompt for an image generation AI (like Stable Diffusion or DALL-E). 
+        Include artistic style, lighting, composition, and high-detail descriptors.
+        Return ONLY the enhanced English prompt text, no explanations.
+        USER INPUT: ${text}`;
+
+        const requestBody = {
+            contents: [{
+                parts: [{ text: prompt }]
+            }]
+        };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) throw new Error('优化失败');
+
+        const result = await response.json();
+        const optimizedText = result.candidates[0].content.parts[0].text.trim();
+
+        return { success: true, optimizedText };
+    } catch (err) {
+        return { success: false, error: err.message };
     }
 }
 
@@ -228,3 +254,4 @@ export function downloadImage(blob, filename = 'generated-image.png') {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+

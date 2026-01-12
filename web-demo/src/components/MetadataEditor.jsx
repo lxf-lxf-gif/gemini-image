@@ -48,15 +48,15 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
 
     return (
         <div className="space-y-4">
-            <h3 className="text-base font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Info className="w-4 h-4" />
+            <h3 className="text-lg font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Info className="w-5 h-5 text-primary-500" />
                 EXIF/IPTC 元数据
             </h3>
 
             {/* Title */}
             <div className="space-y-1">
-                <label className="text-sm text-slate-400 flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> 标题
+                <label className="text-sm font-black text-slate-500 uppercase tracking-wider flex items-center gap-2 ml-1">
+                    <FileText className="w-4 h-4" /> 标题
                 </label>
                 <input
                     type="text"
@@ -70,8 +70,8 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
 
             {/* Description */}
             <div className="space-y-1">
-                <label className="text-sm text-slate-400 flex items-center gap-1">
-                    <Info className="w-3 h-3" /> 描述
+                <label className="text-sm font-black text-slate-500 uppercase tracking-wider flex items-center gap-2 ml-1">
+                    <Info className="w-4 h-4" /> 描述
                 </label>
                 <textarea
                     value={metadata.description || ''}
@@ -86,10 +86,10 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
             {/* Alt Text (SEO) */}
             <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                    <label className="text-sm text-slate-400 flex items-center gap-1">
-                        <Tag className="w-3 h-3" /> Alt 文本 (SEO)
+                    <label className="text-sm font-black text-slate-500 uppercase tracking-wider flex items-center gap-2 ml-1">
+                        <Tag className="w-4 h-4" /> Alt 文本 (SEO)
                     </label>
-                    <span className={`text-xs ${(metadata.alt?.length || 0) > 125 ? 'text-red-400' : 'text-slate-500'}`}>
+                    <span className={`text-xs font-mono ${(metadata.alt?.length || 0) > 125 ? 'text-red-400' : 'text-slate-600'}`}>
                         {metadata.alt?.length || 0}/125
                     </span>
                 </div>
@@ -98,25 +98,25 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
                     onChange={(e) => handleInputChange('alt', e.target.value)}
                     disabled={disabled}
                     rows={2}
-                    className="w-full bg-black/20 border border-white/10 rounded px-3 py-1.5 text-base text-white focus:border-primary-500 outline-none transition-colors resize-none disabled:opacity-50"
+                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-base text-white focus:border-primary-500 outline-none transition-all resize-none disabled:opacity-50"
                     placeholder="简洁的图片替代文本,用于 SEO 和无障碍访问..."
                 />
                 {(metadata.alt?.length || 0) > 125 && (
-                    <p className="text-xs text-red-400">⚠️ 建议控制在 125 字符以内以获得最佳 SEO 效果</p>
+                    <p className="text-lg text-red-400">⚠️ 建议控制在 125 字符以内以获得最佳 SEO 效果</p>
                 )}
             </div>
 
             {/* Keywords/Tags */}
             <div className="space-y-1">
-                <label className="text-sm text-slate-400 flex items-center gap-1">
-                    <Hash className="w-3 h-3" /> 关键词 (回车添加)
+                <label className="text-sm font-black text-slate-500 uppercase tracking-wider flex items-center gap-2 ml-1">
+                    <Hash className="w-4 h-4" /> 关键词 (回车添加)
                 </label>
-                <div className={`flex flex-wrap gap-1.5 bg-black/20 border border-white/10 rounded px-2 py-1.5 min-h-[36px] ${disabled ? 'opacity-50' : 'focus-within:border-primary-500'}`}>
+                <div className={`flex flex-wrap gap-2 bg-black/20 border border-white/10 rounded px-4 py-3 min-h-[48px] ${disabled ? 'opacity-50' : 'focus-within:border-primary-500'}`}>
                     {tags.map((tag, index) => (
-                        <span key={index} className="inline-flex items-center gap-1 bg-primary-500/20 text-primary-400 text-sm px-1.5 py-0.5 rounded">
+                        <span key={index} className="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 text-primary-400 text-sm font-black px-3 py-1 rounded-lg">
                             {tag}
                             {!disabled && (
-                                <button onClick={() => removeTag(index)} className="hover:text-white">
+                                <button onClick={() => removeTag(index)} className="hover:text-white ml-1 opacity-60 hover:opacity-100">
                                     &times;
                                 </button>
                             )}
@@ -137,16 +137,16 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
 
             {/* Author */}
             <div className="space-y-1">
-                <label className="text-sm text-slate-400 flex items-center gap-1">
-                    <User className="w-3 h-3" /> 作者/版权
+                <label className="text-sm font-black text-slate-500 uppercase tracking-wider flex items-center gap-2 ml-1">
+                    <User className="w-4 h-4" /> 作者/版权
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input
                         type="text"
                         value={metadata.author || ''}
                         onChange={(e) => handleInputChange('author', e.target.value)}
                         disabled={disabled}
-                        className="w-full bg-black/20 border border-white/10 rounded px-3 py-1.5 text-base text-white focus:border-primary-500 outline-none transition-colors disabled:opacity-50"
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-base text-white focus:border-primary-500 outline-none transition-all disabled:opacity-50"
                         placeholder="作者"
                     />
                     <input
@@ -154,7 +154,7 @@ const MetadataEditor = ({ metadata, onChange, disabled }) => {
                         value={metadata.copyright || ''}
                         onChange={(e) => handleInputChange('copyright', e.target.value)}
                         disabled={disabled}
-                        className="w-full bg-black/20 border border-white/10 rounded px-3 py-1.5 text-base text-white focus:border-primary-500 outline-none transition-colors disabled:opacity-50"
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-base text-white focus:border-primary-500 outline-none transition-all disabled:opacity-50"
                         placeholder="版权声明"
                     />
                 </div>
