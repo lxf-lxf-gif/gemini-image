@@ -574,7 +574,7 @@ function App() {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 lg:pb-0">
                             {files.map(file => (
                                 <div key={file.id} className="group glass-card rounded-2xl lg:rounded-3xl overflow-hidden hover:scale-[1.05] transition-all hover:shadow-3xl hover:shadow-primary-500/20 border border-white/5 relative bg-slate-900/40">
                                     <div className="aspect-[4/5] bg-black/40 overflow-hidden relative transparent-checkerboard">
@@ -721,7 +721,7 @@ function App() {
                                         value={textToImagePrompt}
                                         onChange={(e) => setTextToImagePrompt(e.target.value)}
                                         placeholder="描述您想生成的杰作..."
-                                        className="w-full max-h-24 lg:max-h-32 py-3 lg:py-4 pr-14 lg:pr-12 bg-transparent border-none outline-none text-slate-100 text-lg lg:text-xl placeholder:text-slate-700 resize-none font-medium custom-scrollbar"
+                                        className="w-full max-h-24 lg:max-h-32 py-4 lg:py-4 pr-14 lg:pr-12 bg-transparent border-none outline-none text-base lg:text-xl placeholder:text-slate-700 resize-none font-medium custom-scrollbar"
                                     />
 
                                     {textToImagePrompt && (
@@ -949,7 +949,7 @@ function App() {
             )}
 
             {/* MOBILE NAVIGATION BAR */}
-            <nav className="lg:hidden flex h-20 border-t border-white/10 bg-black/80 backdrop-blur-2xl z-[60] px-4" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+            <nav className="lg:hidden flex h-20 items-center border-t border-white/10 bg-black/80 backdrop-blur-xl z-[60] px-6 pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'rgba(12, 12, 14, 0.85)', borderColor: 'var(--border-color)' }}>
                 <button
                     onClick={() => setActiveTab('edit')}
                     className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeTab === 'edit' ? 'text-primary-500 scale-110' : 'text-slate-500'}`}
@@ -958,11 +958,11 @@ function App() {
                     <Sliders className="w-6 h-6" />
                     <span className="text-[12px] font-black uppercase tracking-widest">调整</span>
                 </button>
-                <div className="flex items-center py-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-600 to-blue-600 flex items-center justify-center shadow-xl shadow-primary-500/20 active:scale-90 transition-all"
+                <div className="flex items-center -mt-6">
+                    <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-primary-600 to-blue-600 flex items-center justify-center shadow-2xl shadow-primary-500/40 active:scale-95 transition-all border-4 border-[#020617] relative z-10 ${activeTab === 'canvas' ? 'ring-2 ring-primary-500 ring-offset-2 ring-offset-black' : ''}`}
                         onClick={() => setActiveTab('canvas')}
                     >
-                        <Play className={`w-6 h-6 text-white ${activeTab === 'canvas' ? 'fill-current' : ''}`} />
+                        <Play className={`w-7 h-7 text-white ${activeTab === 'canvas' ? 'fill-current' : ''}`} />
                     </div>
                 </div>
                 <button
