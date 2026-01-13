@@ -1,0 +1,226 @@
+#root {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-container {
+  display: grid;
+  grid-template-columns: minmax(240px, 15%) 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  padding: 32px 24px;
+  border-right: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  background: rgba(2, 6, 23, 0.4);
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.nav-item {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: var(--accent-cyan);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 15px var(--accent-cyan);
+}
+
+/* Main Content Area */
+.main-content {
+  padding: 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Page Layout */
+.writer-grid {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+  height: calc(100vh - 140px);
+  overflow: hidden;
+}
+
+.writer-workspace {
+  background: rgba(15, 23, 42, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  border-radius: 24px !important;
+  padding: 40px !important;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Paper Style Refinement */
+.paper-style {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  padding: 80px 100px !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 20px 40px -5px rgba(0, 0, 0, 0.2),
+    0 0 1px 1px rgba(255, 255, 255, 0.8) inset !important;
+  min-height: 1000px;
+  font-family: 'Inter', "Microsoft YaHei", sans-serif;
+  line-height: 1.85;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.paper-style h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a !important;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.paper-style h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b !important;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+}
+
+.paper-style h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155 !important;
+}
+
+/* AI Input Configuration */
+.config-group {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: -4px;
+}
+
+/* Input Styles */
+select,
+input:not([type="checkbox"]),
+textarea {
+  background: rgba(2, 6, 23, 0.5) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+select:hover,
+input:not([type="checkbox"]):hover,
+textarea:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(2, 6, 23, 0.7) !important;
+}
+
+select:focus,
+input:not([type="checkbox"]):focus,
+textarea:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 0 4px var(--accent-cyan-dim) !important;
+}
+
+/* Empty State */
+.empty-state {
+  background: rgba(15, 23, 42, 0.2) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.05) !important;
+  border-radius: 32px !important;
+  padding: 80px 40px !important;
+}
+
+/* Custom Scrollbar Global */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  border: 3px solid var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Mobile Overrides */
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    flex-direction: row;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+
+  .writer-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .writer-workspace {
+    padding: 20px !important;
+  }
+
+  .paper-style {
+    padding: 40px 24px !important;
+  }
+}
