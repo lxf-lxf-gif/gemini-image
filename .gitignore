@@ -1,0 +1,7 @@
+.vercel
+.env*.local
+node_modules
+dist
+seo-writer-web/dist
+seo-writer-web/node_modules
+.DS_Store

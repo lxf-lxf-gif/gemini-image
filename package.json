@@ -1,4 +1,10 @@
 {
+  "name": "seo-writer-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd seo-writer-web && npm install --include=dev && npm run build && cd .. && mkdir -p dist && cp -r seo-writer-web/dist/* dist/"
+  },
   "dependencies": {
     "@types/showdown": "^2.0.6",
     "@types/turndown": "^5.0.6",
