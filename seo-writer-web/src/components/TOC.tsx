@@ -7,14 +7,20 @@ interface TOCProps {
 }
 
 const TOC: React.FC<TOCProps> = ({ content, onClose }) => {
-    const headings = content.split('\n')
-        .filter(line => /^#{1,3}\s/.test(line))
-        .map(line => {
-            const level = line.match(/^#+/)?.[0].length || 1;
-            const text = line.replace(/^#+\s/, '').trim();
-            const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
-            return { level, text, id };
-        });
+    const headings = (() => {
+        const counts = new Map<string, number>();
+        return content.split('\n')
+            .filter(line => /^#{1,3}\s/.test(line))
+            .map(line => {
+                const level = line.match(/^#+/)?.[0].length || 1;
+                const text = line.replace(/^#+\s/, '').trim();
+                const base = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+                const next = (counts.get(base) ?? 0) + 1;
+                counts.set(base, next);
+                const id = next === 1 ? base : `${base}-${next}`;
+                return { level, text, id };
+            });
+    })();
 
     const scrollTo = (id: string) => {
         const el = document.getElementById(id);
@@ -58,9 +64,9 @@ const TOC: React.FC<TOCProps> = ({ content, onClose }) => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {headings.map((h, i) => (
+                {headings.map((h) => (
                     <div
-                        key={i}
+                        key={h.id}
                         onClick={() => scrollTo(h.id)}
                         style={{
                             paddingLeft: `${(h.level - 1) * 16}px`,
