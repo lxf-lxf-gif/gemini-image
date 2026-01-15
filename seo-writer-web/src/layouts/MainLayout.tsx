@@ -66,6 +66,21 @@ const MainLayout: React.FC = () => {
       <main className="main-content">
         <Outlet />
       </main>
+
+      <nav className="bottom-nav" aria-label="Primary">
+        {navItems.map((item) => (
+          <button
+            key={item.path}
+            type="button"
+            className={`bottom-nav-item ${isActive(item.path) ? 'active' : ''}`}
+            onClick={() => navigate(item.path)}
+            aria-current={isActive(item.path) ? 'page' : undefined}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-label">{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Brain, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
-import { type AIProvider } from '../context/settingsStore';
+// import { type AIProvider } from '../context/settingsStore';
 import { useSettings } from '../context/useSettings';
 import { useMemory } from '../context/useMemory';
 import GlassCard from '../components/ui/GlassCard';
@@ -48,7 +48,8 @@ const Settings: React.FC = () => {
         </h1>
       </header>
 
-      <GlassCard variant="panel" style={{ padding: '32px' }}>
+      <GlassCard variant="panel" noPadding className="settings-card">
+        <div className="settings-card-inner">
         <h3 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem' }}>
           <Sparkles size={20} /> AI 模型配置 (API Settings)
         </h3>
@@ -153,9 +154,11 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </GlassCard>
 
-      <GlassCard variant="panel" style={{ padding: '32px' }}>
+      <GlassCard variant="panel" noPadding className="settings-card">
+        <div className="settings-card-inner">
         <h3 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem' }}>
           <Brain size={20} /> AI 记忆库 (Memory Bank)
         </h3>
@@ -165,7 +168,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Add Memory Input */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div className="settings-add-memory">
           <Input
             value={newMemory}
             onChange={(e) => setNewMemory(e.target.value)}
@@ -227,7 +230,7 @@ const Settings: React.FC = () => {
 
                 <div style={{ flex: 1, fontSize: '0.95rem' }}>
                   {editingId === memory.id ? (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="settings-memory-edit-row">
                       <Input 
                         value={editContent} 
                         onChange={(e) => setEditContent(e.target.value)} 
@@ -266,9 +269,11 @@ const Settings: React.FC = () => {
             ))
           )}
         </div>
+        </div>
       </GlassCard>
 
-      <GlassCard variant="panel" style={{ padding: '32px', textAlign: 'center' }}>
+      <GlassCard variant="panel" noPadding className="settings-card">
+        <div className="settings-card-inner settings-about">
         <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '1.1rem' }}>关于 SEO Writer</h3>
         <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.8', maxWidth: '600px', margin: '0 auto' }}>
           专为专业内容创作者设计的 SEO 优化写作工具。<br />
@@ -276,6 +281,7 @@ const Settings: React.FC = () => {
         </div>
         <div style={{ marginTop: '24px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
           Version 2.0.0 (Pro) &bull; Built with React & Google Gemini
+        </div>
         </div>
       </GlassCard>
     </motion.div>

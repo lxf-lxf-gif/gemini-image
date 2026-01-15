@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd seo-writer-web && npm install --include=dev && npm run build && cd .. && mkdir -p dist && cp -r seo-writer-web/dist/* dist/"
+    "build": "cd seo-writer-web && npm install --include=dev && npm run build && cd .. && node -e \"const fs=require('fs');const path=require('path');const root=process.cwd();const src=path.join(root,'seo-writer-web','dist');const dst=path.join(root,'dist');fs.rmSync(dst,{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});const copy=(s,d)=>{for(const ent of fs.readdirSync(s,{withFileTypes:true})){const sp=path.join(s,ent.name);const dp=path.join(d,ent.name);if(ent.isDirectory()){fs.mkdirSync(dp,{recursive:true});copy(sp,dp);}else{fs.copyFileSync(sp,dp);}}};copy(src,dst);\""
   },
   "dependencies": {
     "@types/showdown": "^2.0.6",

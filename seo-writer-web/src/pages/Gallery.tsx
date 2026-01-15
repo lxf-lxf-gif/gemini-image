@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { imageDb, type ImageRecord } from '../services/imageDb';
 import { Trash2, Download, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
+// import { Input } from '../components/ui/Input';
 import { useToast } from '../context/useToast';
 
 const Gallery: React.FC = () => {
@@ -55,14 +55,14 @@ const Gallery: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <header className="gallery-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 className="text-gradient" style={{ fontSize: '2rem', margin: '0 0 8px 0' }}>素材库</h1>
           <p style={{ color: 'var(--text-secondary)', margin: 0 }}>管理所有由 AI 生成的配图 ({images.length})</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <div style={{ position: 'relative', width: '240px' }}>
+        <div className="gallery-actions" style={{ display: 'flex', gap: '12px' }}>
+          <div className="gallery-search" style={{ position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input
               type="text"

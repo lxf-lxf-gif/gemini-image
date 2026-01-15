@@ -137,7 +137,8 @@ export const generateEChartsOption = (parsed: ChartConfig) => {
             }
         ],
         color: ['#0ea5e9', '#8b5cf6', '#f43f5e', '#10b981', '#f59e0b'],
-        backgroundColor: 'transparent'
+        backgroundColor: 'transparent',
+        animation: true // Default animation
     };
 };
 
@@ -153,10 +154,10 @@ export const chartConfigToImage = async (config: ChartConfig): Promise<string> =
 
     try {
         const myChart = echarts.init(div);
-        const option = generateEChartsOption(config);
-        
-        // Disable animation for instant rendering
-        option.animation = false;
+        const option: echarts.EChartsOption = {
+            ...(generateEChartsOption(config) as echarts.EChartsOption),
+            animation: false
+        };
         
         myChart.setOption(option);
         

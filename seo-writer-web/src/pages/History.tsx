@@ -75,8 +75,6 @@ const History: React.FC = () => {
         const regex = /!\[([\s\S]*?)\]\((.*?)\)/g;
         const matches = Array.from(richMarkdown.matchAll(regex));
         
-        // Process in reverse to maintain indices or just string replace (string replace is safer if unique)
-        // We use string replacement with loop, assuming matches are handled
         for (const match of matches) {
             const fullMatch = match[0];
             const alt = match[1];
@@ -90,8 +88,8 @@ const History: React.FC = () => {
                     if (record && record.base64) {
                         richMarkdown = richMarkdown.replace(fullMatch, `![${alt}](${record.base64})`);
                     }
-                } catch (e) {
-                    // Ignore
+                } catch {
+                    void 0;
                 }
             }
         }
@@ -226,6 +224,7 @@ const History: React.FC = () => {
       
       for (const match of matches) {
         const fullMatch = match[0];
+        // const alt = match[1]; // unused
         const alt = match[1];
         const prompt = alt.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
         
@@ -252,12 +251,12 @@ const History: React.FC = () => {
       mimeType = 'text/html';
       
       // Extract ECharts configs
-      const chartConfigs: { id: string, option: any }[] = [];
+      const chartConfigs: { id: string, option: unknown }[] = [];
       let chartIndex = 0;
       
       // Temporary placeholder for processing
       let htmlBody = content
-        .replace(/```echarts\n([\s\S]*?)```/g, (match, code) => {
+        .replace(/```echarts\n([\s\S]*?)```/g, (_match, code) => {
              const id = `echarts-export-${chartIndex++}`;
              try {
                  // Clean and parse JSON using shared utility
@@ -268,7 +267,7 @@ const History: React.FC = () => {
                      return `<div id="${id}" class="echarts-container" style="width:100%;height:400px;margin:30px 0;background:#fff;border-radius:12px;border:1px solid #e2e8f0;"></div>`;
                  }
                  return `<pre class="code-block">${code}</pre>`;
-             } catch (e) {
+             } catch {
                  return `<pre class="code-block">${code}</pre>`;
              }
         });
@@ -342,8 +341,11 @@ ${chartScript}
     showToast(`已导出为 ${format.toUpperCase()}`);
   };
 
+  type MarkdownImgProps = React.ImgHTMLAttributes<HTMLImageElement> & { src?: string; alt?: string };
+  type MarkdownCodeProps = React.HTMLAttributes<HTMLElement> & { inline?: boolean; className?: string; children?: React.ReactNode };
+
   const markdownComponents = useMemo(() => ({
-    img: ({ src, alt, ...props }: any) => {
+    img: ({ src, alt, ...props }: MarkdownImgProps) => {
       if (!src) return null;
       // Clean alt just like in Writer
       const prompt = (alt || '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
@@ -364,7 +366,7 @@ ${chartScript}
       
       return <img src={src} alt={alt} {...props} style={{ maxWidth: '100%', borderRadius: '12px' }} />;
     },
-    code({ inline, className, children, ...props }: any) {
+    code({ inline, className, children, ...props }: MarkdownCodeProps) {
       const match = /language-(\w+)/.exec(className || '');
       if (!inline && match && match[1] === 'echarts') {
         return <ChartBlock config={String(children).replace(/\n$/, '')} />;
@@ -446,18 +448,12 @@ ${chartScript}
                     style={{ position: 'fixed', inset: 0, zIndex: 5 }} 
                     onClick={() => setExportMenuOpenId(null)} 
                   />
-                  <div style={{
-                    position: 'absolute', bottom: '100%', left: 0, marginBottom: '8px',
-                    background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px', overflow: 'hidden', zIndex: 10,
-                    boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.6)',
-                    display: 'flex', flexDirection: 'column', minWidth: '140px'
-                  }}>
-                    {['md', 'html', 'txt'].map(fmt => (
+                  <div className="history-export-menu">
+                    {(['md', 'html', 'txt'] as const).map(fmt => (
                       <button
                         key={fmt}
                         onClick={() => {
-                          handleExport(item, fmt as any);
+                          handleExport(item, fmt);
                           setExportMenuOpenId(null);
                         }}
                         style={{
@@ -550,11 +546,7 @@ ${chartScript}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px'
-            }}
+            className="history-preview-overlay"
             onClick={() => setPreviewItem(null)}
           >
             <motion.div
@@ -562,13 +554,7 @@ ${chartScript}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
-              style={{
-                width: '100%', maxWidth: '900px', height: '90vh',
-                background: 'var(--bg-paper)', borderRadius: '24px',
-                border: '1px solid var(--border-highlight)',
-                display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-              }}
+              className="history-preview-modal"
             >
               <div style={{ padding: '20px 32px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-glass)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{previewItem.topic}</h2>
@@ -577,13 +563,13 @@ ${chartScript}
                 </button>
               </div>
               
-              <div className="custom-scrollbar markdown-content paper-style" style={{ padding: '40px', overflowY: 'auto', flex: 1 }}>
+              <div className="history-preview-body custom-scrollbar markdown-content paper-style" style={{ overflowY: 'auto', flex: 1 }}>
                 <ReactMarkdown 
                   components={markdownComponents}
                   urlTransform={(url) => url}
                 >
                    {previewItem.content
-                     .replace(/!\[([\s\S]*?)\]\((.*?)\)/g, (match, alt, src) => {
+                     .replace(/!\[([\s\S]*?)\]\((.*?)\)/g, (_match, alt, src) => {
                         const cleanAlt = alt.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                         return `![${cleanAlt}](${src})`;
                      })

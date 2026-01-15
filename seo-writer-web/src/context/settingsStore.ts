@@ -27,6 +27,15 @@ export interface SettingsState {
   enableThinking: boolean;
   enableImages: boolean;
   imageAspectRatio: string;
+  
+  // GitHub Integration
+  githubToken?: string;
+  githubRepo?: string;
+  githubBranch?: string;
+  githubPath?: string;
+  
+  // Legacy
+  googleApiKey?: string;
 }
 
 export interface SettingsContextType {

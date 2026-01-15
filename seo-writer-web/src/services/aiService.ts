@@ -1,10 +1,10 @@
 class AIService {
-    private provider: "proxy" = "proxy";
+    // private provider: "proxy" = "proxy";
     private proxyToken: string = "";
     private proxyEndpoint: string = "";
 
     initGemini(options: { provider: "proxy"; proxyToken?: string; proxyEndpoint?: string }) {
-        this.provider = options.provider;
+        // this.provider = options.provider;
         this.proxyToken = (options.proxyToken || "").trim();
         this.proxyEndpoint = (options.proxyEndpoint || "").trim();
     }
@@ -19,7 +19,7 @@ class AIService {
         wordCount: number,
         language: string,
         enableThinking: boolean,
-        enableImages: boolean,
+        _enableImages: boolean, // unused
         anchorTexts: { keyword: string; url: string }[],
         memories: string[],
         onChunk: (chunk: string) => void,
@@ -52,7 +52,7 @@ ${anchorTexts.map(a => `      - "${a.keyword}" -> ${a.url}`).join("\n")}
     - Bar/Line charts use "name" for X-axis and "value" for Y-axis.
     - Choose the most appropriate chart type for the data.`;
 
-        let imageStrategy = "";
+        // let imageStrategy = "";
         // Removed LLM-based image planning in favor of client-side deterministic insertion
         // if (enableImages) { ... }
 
@@ -116,7 +116,7 @@ ${anchorTexts.map(a => `  - "${a.keyword}" -> ${a.url}`).join("\n")}
         const isImagen = model.toLowerCase().includes('imagen');
         
         let urlObj: URL;
-        let body: any;
+        let body: Record<string, unknown>;
 
         if (isImagen) {
             // Imagen Model Logic
@@ -213,12 +213,18 @@ ${anchorTexts.map(a => `  - "${a.keyword}" -> ${a.url}`).join("\n")}
         // if (!this.proxyToken) throw new Error("Proxy token is missing. Please check your settings.");
 
         const endpoint = (this.proxyEndpoint || "https://api.vectorengine.ai").replace(/\/+$/, "");
-        
-        // Detect OpenAI models
+
         const isOpenAI = model.startsWith("gpt") || model.startsWith("o1");
 
+        const canStream = typeof ReadableStream !== "undefined";
+        if (!canStream) {
+            const text = await this.callNonStream(model, systemInstruction, userPrompt, enableThinking, signal);
+            if (text) onChunk(text);
+            return;
+        }
+
         let urlObj: URL;
-        let body: any;
+        let body: Record<string, unknown>;
 
         if (isOpenAI) {
             // OpenAI Compatible Logic
@@ -278,9 +284,7 @@ ${anchorTexts.map(a => `  - "${a.keyword}" -> ${a.url}`).join("\n")}
 
         const headers: Record<string, string> = {
             "Content-Type": "application/json",
-            // "Authorization": `Bearer ${this.proxyToken}`,
-            // "X-API-Key": this.proxyToken,
-            // "x-goog-api-key": this.proxyToken
+            "Accept": "text/event-stream",
         };
         if (this.proxyToken) {
             headers["Authorization"] = `Bearer ${this.proxyToken}`;
@@ -307,45 +311,162 @@ ${anchorTexts.map(a => `  - "${a.keyword}" -> ${a.url}`).join("\n")}
         }
 
         const reader = response.body?.getReader();
-        if (!reader) return;
+        if (!reader) {
+            const text = await this.callNonStream(model, systemInstruction, userPrompt, enableThinking, signal);
+            if (text) onChunk(text);
+            return;
+        }
 
         const decoder = new TextDecoder();
         let buffer = "";
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        let receivedAny = false;
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            for (const line of lines) {
-                if (line.startsWith("data: ")) {
-                    const jsonStr = line.replace("data: ", "").trim();
-                    if (jsonStr === "[DONE]") continue;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
 
-                    try {
-                        const data = JSON.parse(jsonStr);
-                        let text = "";
-                        
-                        if (isOpenAI) {
-                            // OpenAI Stream Format
-                            text = data.choices?.[0]?.delta?.content || "";
-                        } else {
-                            // Gemini Stream Format
-                            text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const jsonStr = line.replace("data: ", "").trim();
+                        if (jsonStr === "[DONE]") continue;
+
+                        try {
+                            const data = JSON.parse(jsonStr);
+                            let text = "";
+
+                            if (isOpenAI) {
+                                text = data.choices?.[0]?.delta?.content || "";
+                            } else {
+                                const parts = data.candidates?.[0]?.content?.parts;
+                                if (Array.isArray(parts)) {
+                                    text = parts.map((p: any) => p?.text || "").join("");
+                                }
+                            }
+
+                            if (text) {
+                                receivedAny = true;
+                                onChunk(text);
+                            }
+                        } catch (e) {
+                            console.error("Error parsing SSE chunk:", e);
                         }
-                        
-                        if (text) {
-                            onChunk(text);
-                        }
-                    } catch (e) {
-                        console.error("Error parsing SSE chunk:", e);
                     }
                 }
             }
+        } catch (e) {
+            if (!receivedAny) {
+                const text = await this.callNonStream(model, systemInstruction, userPrompt, enableThinking, signal);
+                if (text) onChunk(text);
+                return;
+            }
+            throw e;
         }
+    }
+
+    private async callNonStream(
+        model: string,
+        systemInstruction: string,
+        userPrompt: string,
+        enableThinking: boolean,
+        signal?: AbortSignal
+    ): Promise<string> {
+        const endpoint = (this.proxyEndpoint || "https://api.vectorengine.ai").replace(/\/+$/, "");
+        const isOpenAI = model.startsWith("gpt") || model.startsWith("o1");
+
+        let urlObj: URL;
+        let body: any;
+
+        if (isOpenAI) {
+            let baseUrl = endpoint;
+            if (baseUrl.endsWith("/v1beta")) {
+                baseUrl = baseUrl.replace(/\/v1beta$/, "/v1");
+            } else if (!baseUrl.endsWith("/v1")) {
+                baseUrl = `${baseUrl}/v1`;
+            }
+            urlObj = new URL(`${baseUrl}/chat/completions`);
+            body = {
+                model,
+                messages: [
+                    { role: "system", content: systemInstruction },
+                    { role: "user", content: userPrompt },
+                ],
+                stream: false,
+                temperature: 0.7,
+                top_p: 0.95,
+            };
+        } else {
+            const baseUrl = endpoint.includes("/v1beta") ? endpoint : `${endpoint}/v1beta`;
+            urlObj = new URL(`${baseUrl}/models/${model}:generateContent`);
+            const supportsThinking = model.includes("thinking");
+            body = {
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }],
+                },
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: userPrompt }],
+                    },
+                ],
+                generationConfig: {
+                    temperature: 0.7,
+                    topP: 0.95,
+                    ...(enableThinking && supportsThinking
+                        ? {
+                              thinkingConfig: {
+                                  includeThoughts: true,
+                                  thinkingBudget: 16000,
+                              },
+                          }
+                        : {}),
+                },
+            };
+        }
+
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        };
+        if (this.proxyToken) {
+            headers["Authorization"] = `Bearer ${this.proxyToken}`;
+            headers["X-API-Key"] = this.proxyToken;
+            headers["x-goog-api-key"] = this.proxyToken;
+        }
+
+        const response = await fetch(urlObj.toString(), {
+            method: "POST",
+            headers,
+            signal,
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            if (response.status === 401) {
+                throw new Error(
+                    errorData.error?.message ||
+                        "401 Unauthorized：代理/中转鉴权失败，请检查 Proxy Token 与 Endpoint 是否匹配、是否有权限。"
+                );
+            }
+            throw new Error(errorData.error?.message || `API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json().catch(() => ({}));
+        if (isOpenAI) {
+            return data.choices?.[0]?.message?.content || "";
+        }
+
+        const parts = data.candidates?.[0]?.content?.parts;
+        if (Array.isArray(parts)) {
+            return parts.map((p: any) => p?.text || "").join("");
+        }
+        return "";
     }
 }
 

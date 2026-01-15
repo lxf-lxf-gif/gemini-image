@@ -1,14 +1,15 @@
 import React from 'react';
-import { Settings as SettingsIcon, Link, X, Loader2, Sparkles, Zap } from 'lucide-react';
+// import { Settings as SettingsIcon, Link, X, Loader2, Sparkles, Zap } from 'lucide-react';
+import { Link, X, Loader2, Sparkles, Zap } from 'lucide-react';
 import { Input, Select } from './ui/Input';
 import Button from './ui/Button';
-import { type SettingsState, type AIProvider } from '../context/settingsStore';
+import { type SettingsState } from '../context/settingsStore';
 
 interface WriterConfigProps {
   settings: SettingsState;
   updateSettings: (updates: Partial<SettingsState>) => void;
   anchorTexts: { id: string; keyword: string; url: string }[];
-  setAnchorTexts: (val: any[]) => void;
+  setAnchorTexts: (val: { id: string; keyword: string; url: string }[]) => void;
   onGenerate: () => void;
   isGenerating: boolean;
   genMode: 'full' | 'continue' | null;
@@ -27,25 +28,6 @@ const WriterConfig: React.FC<WriterConfigProps> = ({
   className,
   style
 }) => {
-    const [modelInput, setModelInput] = React.useState(settings.model);
-    const [imageModelInput, setImageModelInput] = React.useState(settings.imageModel);
-
-    // Sync when settings change externally or on load
-    React.useEffect(() => {
-        setModelInput(settings.model);
-        setImageModelInput(settings.imageModel);
-    }, [settings.model, settings.imageModel]);
-
-    const handleModelChange = (val: string) => {
-        setModelInput(val);
-        updateSettings({ model: val });
-    };
-
-    const handleImageModelChange = (val: string) => {
-        setImageModelInput(val);
-        updateSettings({ imageModel: val });
-    };
-
   return (
     <div className={`writer-config ${className || ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '20px', ...style }}>
       
@@ -62,7 +44,7 @@ const WriterConfig: React.FC<WriterConfigProps> = ({
                 </div>
                 <Select
                     value={settings.model}
-                    onChange={(e) => handleModelChange(e.target.value)}
+                    onChange={(e) => updateSettings({ model: e.target.value })}
                     options={[
                         { label: "Gemini 2.0 Flash Exp (Fastest)", value: "gemini-2.0-flash-exp" },
                         { label: "Gemini 1.5 Flash (Balanced)", value: "gemini-1.5-flash" },

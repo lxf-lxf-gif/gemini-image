@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Sparkles, PenTool, Loader2, Copy, Download, ExternalLink, Eye, List, X, Settings as SettingsIcon, CheckCircle, Image as ImageIcon, Send, ChevronRight, Edit3, Save, Link as LinkIcon, Zap } from 'lucide-react';
+import { Sparkles, Loader2, Download, Settings as SettingsIcon, Image as ImageIcon, Send, Edit3, Save, Link as LinkIcon, Zap, PenTool, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import ReactQuill, { Quill } from 'react-quill-new';
@@ -10,11 +10,20 @@ import * as echarts from 'echarts';
 import { type AIProvider } from '../context/settingsStore';
 import { dirtyJsonParse, generateEChartsOption, isChartConfig } from '../utils/chartUtils';
 
+type BlockEmbedConstructor = new (...args: unknown[]) => Record<string, unknown>;
+type BlockEmbedStatic = {
+    create: (value?: unknown) => HTMLElement;
+    value: (node: HTMLElement) => unknown;
+};
+
 // --- Custom Quill Blot for ECharts ---
-const BlockEmbed = Quill.import('blots/block/embed');
+const BlockEmbed = Quill.import('blots/block/embed') as unknown as BlockEmbedConstructor & BlockEmbedStatic;
 
 class ChartBlot extends BlockEmbed {
-    static create(value: any) {
+    static blotName = 'chart';
+    static tagName = 'div';
+
+    static create(value: unknown) {
         const node = super.create();
         // Ensure value is an object
         // Handle potentially URI encoded string from HTML attribute
@@ -59,7 +68,7 @@ class ChartBlot extends BlockEmbed {
                     // Resize observer to handle window resize
                     const resizeObserver = new ResizeObserver(() => myChart.resize());
                     resizeObserver.observe(chartDiv);
-                } catch (e) {
+                } catch {
                     chartDiv.innerText = 'Chart Render Error';
                 }
             } else {
@@ -86,12 +95,16 @@ class ChartBlot extends BlockEmbed {
     }
 }
 
-ChartBlot.blotName = 'chart-widget';
-ChartBlot.tagName = 'div';
-ChartBlot.className = 'quill-chart-widget';
+Quill.register({ 'formats/chart': ChartBlot });
 
-Quill.register(ChartBlot);
-// -------------------------------------
+type QuillEditorProps = {
+    theme: string;
+    value: string;
+    onChange: (value: string) => void;
+    modules?: unknown;
+};
+
+const ReactQuillCmp = ReactQuill as unknown as React.ComponentType<QuillEditorProps>;
 import { useSettings } from '../context/useSettings';
 import { useHistory } from '../context/useHistory';
 import { useMemory } from '../context/useMemory';
@@ -99,7 +112,7 @@ import { useToast } from '../context/useToast';
 import { aiService } from '../services/aiService';
 import { imageDb } from '../services/imageDb';
 import ChartBlock from '../components/ChartBlock';
-import TOC from '../components/TOC';
+// import TOC from '../components/TOC'; // Unused
 import Button from '../components/ui/Button';
 import { Select, Input } from '../components/ui/Input';
 import { useLocation } from 'react-router-dom';
@@ -126,7 +139,7 @@ const Writer: React.FC = () => {
   const [result, setResult] = useState(() => localStorage.getItem('writer_cache_content') || '');
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
   const [generatingImgPrompt, setGeneratingImgPrompt] = useState<string | null>(null);
-  const [isBatchGeneratingImages, setIsBatchGeneratingImages] = useState(false);
+  const [isBatchGeneratingImages] = useState(false);
   
   // Persistence Effects
   useEffect(() => {
@@ -144,10 +157,9 @@ const Writer: React.FC = () => {
   
   // UI State
   const [isGenerating, setIsGenerating] = useState(false);
-  const [genMode, setGenMode] = useState<'full' | 'continue' | null>(null);
   // const [showConfig, setShowConfig] = useState(false); // Removed
-  const [showTOC, setShowTOC] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
+  // const [showTOC, setShowTOC] = useState(false);
+  // const [showExportMenu, setShowExportMenu] = useState(false);
   const [activeProvider, setActiveProvider] = useState<AIProvider>(() => settings.aiProvider);
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview');
   const [htmlContent, setHtmlContent] = useState('');
@@ -186,20 +198,24 @@ const Writer: React.FC = () => {
   };
 
   // Pre-define markdown components with useMemo to avoid re-rendering issues and hook errors
+  type MarkdownHeadingProps = { children?: React.ReactNode };
+  type MarkdownImgProps = React.ImgHTMLAttributes<HTMLImageElement> & { src?: string; alt?: string };
+  type MarkdownCodeProps = React.HTMLAttributes<HTMLElement> & { inline?: boolean; className?: string; children?: React.ReactNode };
+
   const markdownComponents = React.useMemo(() => ({
-    h1: ({ children }: any) => {
+    h1: ({ children }: MarkdownHeadingProps) => {
       const id = getHeadingId(children);
       return <h1 id={id}>{children}</h1>;
     },
-    h2: ({ children }: any) => {
+    h2: ({ children }: MarkdownHeadingProps) => {
       const id = getHeadingId(children);
       return <h2 id={id}>{children}</h2>;
     },
-    h3: ({ children }: any) => {
+    h3: ({ children }: MarkdownHeadingProps) => {
       const id = getHeadingId(children);
       return <h3 id={id}>{children}</h3>;
     },
-    img: ({ src, alt, ...props }: any) => {
+    img: ({ src, alt, ...props }: MarkdownImgProps) => {
       if (!src) return null;
       
       // Loose matching for placeholder
@@ -272,13 +288,13 @@ const Writer: React.FC = () => {
           if (generatedImages[decodedPrompt]) {
             return <img src={generatedImages[decodedPrompt]} alt={alt} {...props} style={{ maxWidth: '100%', borderRadius: '12px' }} />;
           }
-        } catch (e) {
+        } catch {
           return <img src={src} alt={alt} {...props} />;
         }
       }
       return <img src={src} alt={alt} {...props} style={{ maxWidth: '100%', borderRadius: '12px' }} />;
     },
-    code({ inline, className, children, ...props }: any) {
+    code({ inline, className, children, ...props }: MarkdownCodeProps) {
       const match = /language-(\w+)/.exec(className || '');
       if (!inline && match && match[1] === 'echarts') {
         return <ChartBlock config={String(children).replace(/\n$/, '')} />;
@@ -359,7 +375,6 @@ const Writer: React.FC = () => {
     }
 
     setIsGenerating(true);
-    setGenMode('full');
     setResult('');
     // setShowConfig(false); // Removed
 
@@ -371,7 +386,6 @@ const Writer: React.FC = () => {
     try {
       aiService.initGemini({
         provider,
-        googleApiKey: settings.googleApiKey,
         proxyToken: settings.proxyToken,
         proxyEndpoint: settings.proxyEndpoint,
       });
@@ -429,7 +443,7 @@ const Writer: React.FC = () => {
       if (
         (error instanceof DOMException && error.name === 'AbortError') ||
         (error instanceof Error && error.name === 'AbortError') ||
-        (typeof error === 'object' && error !== null && 'name' in error && (error as any).name === 'AbortError') ||
+        (typeof error === 'object' && error !== null && 'name' in error && (error as { name?: string }).name === 'AbortError') ||
         String(error).includes('AbortError')
       ) {
         return;
@@ -448,7 +462,6 @@ const Writer: React.FC = () => {
     } finally {
       if (seq === streamSeqRef.current && !controller.signal.aborted) {
         setIsGenerating(false);
-        setGenMode(null);
       }
     }
   };
@@ -458,7 +471,6 @@ const Writer: React.FC = () => {
     // if (provider === 'proxy' && !settings.proxyToken) return;
 
     setIsGenerating(true);
-    setGenMode('continue');
 
     streamAbortRef.current?.abort();
     const controller = new AbortController();
@@ -468,7 +480,6 @@ const Writer: React.FC = () => {
     try {
       aiService.initGemini({
         provider,
-        googleApiKey: settings.googleApiKey,
         proxyToken: settings.proxyToken,
         proxyEndpoint: settings.proxyEndpoint,
       });
@@ -496,7 +507,7 @@ const Writer: React.FC = () => {
       if (
         (error instanceof DOMException && error.name === 'AbortError') ||
         (error instanceof Error && error.name === 'AbortError') ||
-        (typeof error === 'object' && error !== null && 'name' in error && (error as any).name === 'AbortError') ||
+        (typeof error === 'object' && error !== null && 'name' in error && (error as { name?: string }).name === 'AbortError') ||
         String(error).includes('AbortError')
       ) {
         return;
@@ -506,7 +517,6 @@ const Writer: React.FC = () => {
     } finally {
       if (seq === streamSeqRef.current && !controller.signal.aborted) {
         setIsGenerating(false);
-        setGenMode(null);
       }
     }
   };
@@ -544,52 +554,22 @@ const Writer: React.FC = () => {
     }
   };
 
-  const handleGenerateAllImages = async () => {
-    if (isBatchGeneratingImages) return;
-    const regex = /!\[(.*?)\]\(ai-image:\/\/placeholder\)/g;
-    const matches = Array.from(result.matchAll(regex));
-    const prompts = matches.map(m => m[1].trim()).filter(p => p && !generatedImages[p]);
-
-    if (prompts.length === 0) {
-      showToast('没有检测到需要生成的图片', 'info');
-      return;
-    }
-
-    setIsBatchGeneratingImages(true);
-    // Always use global settings
-    aiService.initGemini({
-      provider: settings.aiProvider,
-      proxyToken: settings.proxyToken,
-      proxyEndpoint: settings.proxyEndpoint,
-    });
-
-    let successCount = 0;
-    for (const prompt of prompts) {
-      try {
-        setGeneratingImgPrompt(prompt);
-        await new Promise(r => setTimeout(r, 1500));
-        const base64 = await aiService.generateImage(prompt, settings.imageModel, settings.imageAspectRatio);
-        const res = await fetch(base64);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        await imageDb.saveImage(prompt, base64);
-
-        setGeneratedImages(prev => {
-          if (prev[prompt] && prev[prompt].startsWith('blob:')) {
-            URL.revokeObjectURL(prev[prompt]);
-          }
-          return { ...prev, [prompt]: blobUrl };
-        });
-        successCount++;
-      } catch (e) {
-        console.error(`Failed to generate image for "${prompt}":`, e);
-      }
-    }
-
-    setGeneratingImgPrompt(null);
-    setIsBatchGeneratingImages(false);
-    showToast(`批量生成完成: 成功 ${successCount}/${prompts.length}`);
+  /*
+  const _handleGenerateAllImages = async () => {
+    // ...
   };
+  */
+  
+  // Suppress unused variable warning for now by using it in a way that doesn't execute
+  // or simply comment it out if it is not used.
+  // Actually, let's just comment out the state if it's not used elsewhere.
+  // const [isBatchGeneratingImages, setIsBatchGeneratingImages] = useState(false);
+  // It is used in handleGenerateImage disabled prop.
+  // So we need to keep it, but we need to use setIsBatchGeneratingImages somewhere or rename it.
+  // Let's just suppress the warning by using it in a no-op function.
+  // const _suppressUnused = () => {
+  //   setIsBatchGeneratingImages(false);
+  // };
 
   const handleExport = async (format: 'md' | 'html' | 'txt') => {
       let content = result;
@@ -639,26 +619,15 @@ const Writer: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setShowExportMenu(false);
+      // setShowExportMenu(false); // Removed
       showToast(`已导出为 ${format.toUpperCase()}`);
     };
-  
-    const handleFullScreenPreview = () => {
-      // ... (Existing preview logic simplified for brevity, assume user knows)
-      // Actually let's keep it simple or user can use History preview
-      if (!result) return;
-      const previewWindow = window.open('', '_blank');
-      if (!previewWindow) return;
-      previewWindow.document.write(`<pre>${result}</pre>`);
-      previewWindow.document.close();
-    };
-
   // Pre-process markdown to clean image syntax and remove extra asterisks
   const cleanResult = React.useMemo(() => {
     let cleaned = result;
     
     // 1. Fix broken image syntax
-    cleaned = cleaned.replace(/!\[([\s\S]*?)\]\((.*?)\)/g, (match, alt, src) => {
+    cleaned = cleaned.replace(/!\[([\s\S]*?)\]\((.*?)\)/g, (_match, alt, src) => {
       const cleanAlt = alt.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
       return `![${cleanAlt}](${src})`;
     });
@@ -680,18 +649,18 @@ const Writer: React.FC = () => {
                  {
                      type: 'lang',
                      regex: /```echarts\s*([\s\S]*?)```/g,
-                     replace: (match, code) => {
+                     replace: (_match, code) => {
                          try {
                             // Clean and parse to ensure it's valid JSON for the attribute
-                            const cleanCode = code.trim();
+                            const cleanCode = (code as string).trim();
                             // We don't parse it here, we just escape it for HTML attribute
                             // Actually, let's parse and stringify to be safe
                             const json = JSON.parse(cleanCode);
                             // Use encodeURIComponent for safe HTML attribute storage
                             const jsonStr = encodeURIComponent(JSON.stringify(json));
-                            return `<div class="quill-chart-widget" data-chart="\${jsonStr}"></div>`;
-                        } catch (e) {
-                            return `<pre><code>\${code}</code></pre>`;
+                            return `<div class="quill-chart-widget" data-chart="${jsonStr}"></div>`;
+                        } catch {
+                            return `<pre><code>${code}</code></pre>`;
                         }
                      }
                  }
@@ -716,7 +685,7 @@ const Writer: React.FC = () => {
             filter: (node) => {
                 return node.nodeName === 'DIV' && node.classList.contains('quill-chart-widget');
             },
-            replacement: (content, node) => {
+            replacement: (_content, node) => {
                 const element = node as HTMLElement;
                 const data = element.getAttribute('data-chart');
                 if (data) {
@@ -724,12 +693,12 @@ const Writer: React.FC = () => {
                         // Decode safe URI component first
                         const decoded = decodeURIComponent(data);
                         const json = JSON.parse(decoded);
-                        return `\n\`\`\`echarts\n\${JSON.stringify(json, null, 2)}\n\`\`\`\n`;
+                        return `\n\`\`\`echarts\n${JSON.stringify(json, null, 2)}\n\`\`\`\n`;
                     } catch {
                         // Fallback: try parsing directly if it was old format
                         try {
                             const json = JSON.parse(data);
-                            return `\n\`\`\`echarts\n\${JSON.stringify(json, null, 2)}\n\`\`\`\n`;
+                            return `\n\`\`\`echarts\n${JSON.stringify(json, null, 2)}\n\`\`\`\n`;
                         } catch {
                              return '';
                         }
@@ -755,7 +724,7 @@ const Writer: React.FC = () => {
         {result ? (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* Minimal Header */}
-                <div style={{ 
+                <div className="writer-result-header" style={{ 
                     padding: '16px 32px', 
                     borderBottom: '1px solid rgba(255,255,255,0.05)', 
                     display: 'flex', 
@@ -764,12 +733,12 @@ const Writer: React.FC = () => {
                     background: 'var(--bg-glass)',
                     backdropFilter: 'blur(10px)'
                 }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 className="writer-result-title" style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Sparkles size={18} className="text-gradient" /> 
                         <span className="text-gradient">{topic || 'Generated Article'}</span>
                     </h2>
                     
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="writer-result-actions" style={{ display: 'flex', gap: '8px' }}>
                         <Button variant="ghost" onClick={() => { setResult(''); setTopic(''); setAnchorTexts([]); }} style={{ fontSize: '0.9rem' }}>新创作</Button>
                         <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
                         
@@ -787,7 +756,7 @@ const Writer: React.FC = () => {
                 </div>
 
                 {/* Reading Area */}
-                <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '40px 20px' }}>
+                <div className="no-scrollbar writer-reading" style={{ flex: 1, overflowY: 'auto', padding: '40px 20px' }}>
                     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '100px' }}>
                         <div className="markdown-content paper-style">
                             {viewMode === 'preview' ? (
@@ -796,7 +765,7 @@ const Writer: React.FC = () => {
                                 </ReactMarkdown>
                             ) : (
                                 <div className="quill-dark-wrapper">
-                                    <ReactQuill 
+                                    <ReactQuillCmp 
                                         theme="snow" 
                                         value={htmlContent} 
                                         onChange={setHtmlContent} 
@@ -869,9 +838,9 @@ const Writer: React.FC = () => {
                 background: 'radial-gradient(circle at center, rgba(129, 140, 248, 0.03) 0%, transparent 70%)',
                 overflowY: 'auto'
             }}>
-                <div style={{ maxWidth: '900px', width: '100%', textAlign: 'center', margin: 'auto' }}>
+                <div className="writer-container">
                     <div style={{ marginBottom: '40px' }}>
-                        <h1 className="text-gradient" style={{ fontSize: '3.5rem', marginBottom: '16px', fontWeight: 800, letterSpacing: '-1px' }}>
+                        <h1 className="text-gradient hero-title" style={{ marginBottom: '16px', fontWeight: 800, letterSpacing: '-1px' }}>
                             SEO Writer
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>
@@ -880,17 +849,7 @@ const Writer: React.FC = () => {
                     </div>
 
                     {/* Big Input Box */}
-                    <div style={{ 
-                        background: 'var(--bg-paper)', 
-                        borderRadius: '24px', 
-                        padding: '16px',
-                        boxShadow: '0 10px 40px -10px rgba(0,0,0,0.3)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        position: 'relative',
-                        transition: 'transform 0.2s',
-                        maxWidth: '700px',
-                        margin: '0 auto'
-                    }}>
+                    <div className="big-input-box">
                         <textarea
                             placeholder="想写什么主题？例如：2025年人工智能发展趋势... (可选：使用 | 分隔关键词)"
                             value={topic}
@@ -929,7 +888,7 @@ const Writer: React.FC = () => {
                     </div>
 
                     {/* Main Configuration Panel (Moved from Settings) */}
-                    <div style={{ marginTop: '32px', width: '100%', display: 'grid', gridTemplateColumns: '350px 1fr', gap: '24px', textAlign: 'left' }}>
+                    <div className="writer-config-grid">
                         
                         {/* Left Column: Core Settings */}
                         <div style={{ background: 'var(--bg-paper)', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.05)', height: 'fit-content' }}>
@@ -1005,7 +964,7 @@ const Writer: React.FC = () => {
                                     <Sparkles size={18} className="text-gradient" />
                                     <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>SEO 参数 (Parameters)</span>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div className="writer-seo-grid">
                                     <Select
                                         label="语气风格 (Tone)"
                                         value={settings.tone}
@@ -1062,7 +1021,7 @@ const Writer: React.FC = () => {
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {anchorTexts.map((item, index) => (
-                                        <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 32px', gap: '8px', alignItems: 'center' }}>
+                                        <div key={item.id} className="writer-anchor-row">
                                             <Input
                                                 placeholder="关键词"
                                                 value={item.keyword}

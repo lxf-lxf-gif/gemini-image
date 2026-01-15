@@ -4,7 +4,7 @@ import { SettingsContext, type AIProvider, type SettingsState } from './settings
 const defaultSettings: SettingsState = {
   aiProvider: 'proxy',
   proxyToken: '',
-  proxyEndpoint: 'https://generativelanguage.googleapis.com/v1beta',
+  proxyEndpoint: 'https://api.vectorengine.ai',
   model: 'gemini-2.0-flash-exp',
 
   imageModel: 'gemini-2.0-flash-exp',
@@ -17,7 +17,11 @@ const defaultSettings: SettingsState = {
   intent: 'Informational',
   enableThinking: false,
   enableImages: false,
-  imageAspectRatio: '16:9'
+  imageAspectRatio: '16:9',
+  
+  // GitHub defaults
+  githubBranch: 'main',
+  githubPath: 'content/posts'
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,6 +46,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (safeGet('seo_enable_images')) loadedSettings.enableImages = safeGet('seo_enable_images') === 'true';
     if (safeGet('seo_image_aspect_ratio')) loadedSettings.imageAspectRatio = safeGet('seo_image_aspect_ratio')!;
     
+    // Load GitHub settings
+    if (safeGet('seo_github_token')) loadedSettings.githubToken = safeGet('seo_github_token')!;
+    if (safeGet('seo_github_repo')) loadedSettings.githubRepo = safeGet('seo_github_repo')!;
+    if (safeGet('seo_github_branch')) loadedSettings.githubBranch = safeGet('seo_github_branch')!;
+    if (safeGet('seo_github_path')) loadedSettings.githubPath = safeGet('seo_github_path')!;
+
     return { ...defaultSettings, ...loadedSettings };
   });
 
@@ -62,6 +72,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('seo_enable_thinking', String(settings.enableThinking));
     localStorage.setItem('seo_enable_images', String(settings.enableImages));
     localStorage.setItem('seo_image_aspect_ratio', settings.imageAspectRatio);
+    
+    // Save GitHub settings
+    if (settings.githubToken) localStorage.setItem('seo_github_token', settings.githubToken);
+    if (settings.githubRepo) localStorage.setItem('seo_github_repo', settings.githubRepo);
+    if (settings.githubBranch) localStorage.setItem('seo_github_branch', settings.githubBranch);
+    if (settings.githubPath) localStorage.setItem('seo_github_path', settings.githubPath);
   }, [settings]);
 
   const updateSettings = (updates: Partial<SettingsState>) => {
